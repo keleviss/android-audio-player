@@ -9,9 +9,10 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.annotation.SuppressLint;
+import android.content.ContentResolver;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
@@ -19,7 +20,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -30,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
     ImageView songIcon;
     TextView songTitle;
     ImageView playPauseBtn;
-    Song currentSong;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,24 +43,26 @@ public class MainActivity extends AppCompatActivity {
 
         checkExternalStoragePermission();
 
-
     }
 
     void loadAudioFiles() {
+        ContentResolver contentResolver = getContentResolver();
 
-        String[] projection = {
-                MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Media.DATA,
-                MediaStore.Audio.Media.DURATION
-        };
+        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        String[] projection = {MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.DATA, MediaStore.Audio.Media.DURATION};
+        String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
+        String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
-        String selection = MediaStore.Audio.Media.IS_MUSIC;
+        Cursor cursor = contentResolver.query(uri, projection, selection, null, sortOrder);
 
-        @SuppressLint("Recycle") Cursor cursor = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, selection, null,null);
         while (cursor != null && cursor.moveToNext()) {
+            // Create new Song object and add it to the ArrayList
             Song songData = new Song(cursor.getString(1),cursor.getString(0), cursor.getString(2));
-            if (new File(songData.getPath()).exists())
-                songsList.add(songData);
+            songsList.add(songData);
+        }
+
+        if (cursor != null) {
+            cursor.close();
         }
 
         if (songsList.size() == 0) {
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Check External Storage Permission
     void checkExternalStoragePermission() {
         int selfPermission = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE);
         // Check if permission is not granted

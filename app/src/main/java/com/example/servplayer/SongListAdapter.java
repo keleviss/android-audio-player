@@ -1,6 +1,5 @@
 package com.example.servplayer;
 
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
