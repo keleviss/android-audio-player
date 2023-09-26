@@ -3,4 +3,8 @@
     <string name="no_song_playing">No song playing</string>
     <string name="song_title_text_view">Song Title Text View</string>
     <string name="_15_30">15:30</string>
+    <string name="device_music">Device Music</string>
+    <string name="play_pause">Play/Pause</string>
+    <string name="skip_previous">Skip Previous</string>
+    <string name="skip_next">Skip Next</string>
 </resources>

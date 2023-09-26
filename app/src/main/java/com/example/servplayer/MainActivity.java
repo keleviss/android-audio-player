@@ -16,7 +16,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
-import android.widget.ImageView;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,9 +28,8 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerView;
     TextView noMusicTextView;
     ArrayList<Song> songsList = new ArrayList<>();
-    ImageView songIcon;
     TextView songTitle;
-    ImageView playPauseBtn;
+    ImageButton playPauseBtn, nextBtn, prevBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,9 +37,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         recyclerView = findViewById(R.id.recycler_view);
-        songIcon = findViewById(R.id.songPlayingIcon);
-        songTitle = findViewById(R.id.songPlayingTitle);
-        playPauseBtn = findViewById(R.id.playPause);
+        songTitle = findViewById(R.id.currentSongTitle);
+        playPauseBtn = findViewById(R.id.play_pause_btn);
+        nextBtn = findViewById(R.id.next_btn);
+        prevBtn = findViewById(R.id.prev_btn);
 
         checkExternalStoragePermission();
 
