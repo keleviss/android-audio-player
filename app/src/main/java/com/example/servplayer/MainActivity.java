@@ -20,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -46,19 +47,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void loadAudioFiles() {
-        ContentResolver contentResolver = getContentResolver();
+        songsList = new ArrayList<>();
 
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String[] projection = {MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.DATA, MediaStore.Audio.Media.DURATION};
         String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
 
+        ContentResolver contentResolver = getContentResolver();
         Cursor cursor = contentResolver.query(uri, projection, selection, null, sortOrder);
-
         while (cursor != null && cursor.moveToNext()) {
             // Create new Song object and add it to the ArrayList
             Song songData = new Song(cursor.getString(1),cursor.getString(0), cursor.getString(2));
-            songsList.add(songData);
+            if (new File(songData.getPath()).exists())
+                songsList.add(songData);
         }
 
         // Close cursor once we are done with it
