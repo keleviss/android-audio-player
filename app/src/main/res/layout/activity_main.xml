@@ -44,7 +44,8 @@
             android:ellipsize="marquee"
             android:padding="20dp"
             android:singleLine="true"
-            android:text="No song playing"
+            android:text="@string/no_song_playing"
+            android:fontFamily="@font/gotham"
             android:textColor="#FFFFFF"
             android:textSize="16sp" />
 

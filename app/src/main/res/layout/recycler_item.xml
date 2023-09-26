@@ -36,8 +36,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:layout_constraintTop_toTopOf="parent"
-                android:text="Song Title Text View"
+                android:text="@string/song_title_text_view"
                 android:textColor="@color/white"
+                android:fontFamily="@font/gotham_bold"
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:padding="8dp"
@@ -50,8 +51,9 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 android:padding="8dp"
-                android:text="15:30"
-                android:textColor="#CCCCCC"/>
+                android:text="@string/_15_30"
+                android:textColor="#CCCCCC"
+                android:fontFamily="@font/gotham"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
