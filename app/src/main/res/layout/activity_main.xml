@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".MainActivity"
+    android:background="@drawable/gradient_background">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_action_bar"
+        android:layout_marginTop="8dp"/>
+
+    <RelativeLayout
+        android:id="@+id/bottom_action_bar"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:background="@drawable/mini_player"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <ImageView
+            android:id="@+id/songPlayingIcon"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:background="@drawable/song_item_bg_round"
+            android:src="@drawable/rectangle_icon_nobg"
+            android:layout_marginStart="20dp"
+            android:layout_centerVertical="true"
+            android:contentDescription="@string/app_name"/>
+
+        <TextView
+            android:id="@+id/songPlayingTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toStartOf="@+id/playPause"
+            android:layout_toEndOf="@+id/songPlayingIcon"
+            android:layout_centerVertical="true"
+            android:ellipsize="marquee"
+            android:padding="20dp"
+            android:singleLine="true"
+            android:text="No song playing"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/playPause"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/baseline_pause_circle_outline_24"
+            android:layout_marginEnd="20dp"
+            android:contentDescription="@string/app_name"/>
+
+    </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
