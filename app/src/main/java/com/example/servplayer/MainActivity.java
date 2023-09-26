@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
             songsList.add(songData);
         }
 
+        // Close cursor once we are done with it
         if (cursor != null) {
             cursor.close();
         }
