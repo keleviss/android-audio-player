@@ -41,22 +41,24 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         String duration = formatDuration(songData.getDuration());
         holder.durationTextView.setText(duration);
 
-        Toast.makeText(context, "Selected song: " + holder.titleTextView, Toast.LENGTH_SHORT).show();
+
 
         /*if (MyMediaPlayer.currentIndex == position) {
             holder.titleTextView.setTextColor(Color.parseColor("#FF00E9FE"));
         } else {
             holder.titleTextView.setTextColor(Color.parseColor("#FFFFFF"));
-        }
+        }*/
 
         holder.itemView.setOnClickListener(v -> {
-            MyMediaPlayer.getInstance().reset();
+            Toast.makeText(context, "Selected song: " + holder.titleTextView.getText(), Toast.LENGTH_SHORT).show();
+            /*MyMediaPlayer.getInstance().reset();
             MyMediaPlayer.currentIndex = holder.getAdapterPosition();
             Intent intent = new Intent(context, MusicPlayerActivity.class);
             intent.putExtra("LIST", songsList);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
-        });*/
+            context.startActivity(intent);*/
+
+        });
     }
 
     @Override
