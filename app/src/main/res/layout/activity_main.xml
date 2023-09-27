@@ -5,28 +5,26 @@
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".MainActivity"
-    android:background="#141414">
+    android:background="#0A0A0A">
 
     <TextView
         android:id="@+id/activity_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="10dp"
+        android:padding="5dp"
         android:text="@string/device_music"
         android:textAlignment="center"
         android:textColor="@color/white"
         android:textSize="20sp"
-        android:fontFamily="@font/nexa_bold"
-        />
+        android:fontFamily="@font/montserrat_bold"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/activity_title"
-        android:layout_above="@+id/bottom_action_bar"
-        android:layout_marginTop="10dp"/>
+        android:layout_above="@+id/bottom_action_bar"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottom_action_bar"
@@ -49,7 +47,7 @@
             android:textAlignment="center"
             android:textColor="@color/white"
             android:textSize="16sp"
-            android:fontFamily="@font/nexa_bold"/>
+            android:fontFamily="@font/montserrat_bold"/>
 
         <SeekBar
             android:id="@+id/seekbar"

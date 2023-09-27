@@ -1,26 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="70dp"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:elevation="10dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="60dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginVertical="8dp"
-        android:layout_marginHorizontal="6dp">
+        android:layout_marginTop="5dp"
+        android:layout_marginHorizontal="10dp"
+        android:background="@drawable/song_item_bg_round">
 
         <ImageView
             android:id="@+id/artworkView"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_marginStart="10dp"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginStart="15dp"
             android:layout_centerVertical="true"
-            android:background="@drawable/play_btn_bg"
+            android:background="@drawable/song_img_rect"
             android:src="@drawable/rectangle_icon_nobg"
             android:contentDescription="@string/app_name" />
 
@@ -38,7 +39,7 @@
                 app:layout_constraintTop_toTopOf="parent"
                 android:text="@string/song_title_text_view"
                 android:textColor="@color/white"
-                android:fontFamily="@font/nexa_bold"
+                android:fontFamily="@font/montserrat_medium"
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:padding="8dp"
@@ -53,7 +54,7 @@
                 android:padding="8dp"
                 android:text="@string/_15_30"
                 android:textColor="#CCCCCC"
-                android:fontFamily="@font/nexa_light"/>
+                android:fontFamily="@font/montserrat_light"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -1,12 +1,12 @@
 <resources>
     <style name="Theme.ServPlayer" parent="Base.Theme.ServPlayer">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/blue</item>
-        <item name="colorPrimaryVariant">@color/blue</item>
+        <item name="colorPrimary">@color/dark_10</item>
+        <item name="colorPrimaryVariant">@color/dark_10</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/dark_blue</item>
-        <item name="colorSecondaryVariant">@color/dark_blue</item>
+        <item name="colorSecondary">@color/dark_10</item>
+        <item name="colorSecondaryVariant">@color/dark_10</item>
         <item name="colorOnSecondary">@color/white</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor" >?attr/colorPrimaryVariant</item>
