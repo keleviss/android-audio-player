@@ -7,4 +7,7 @@
     <string name="play_pause">Play/Pause</string>
     <string name="skip_previous">Skip Previous</string>
     <string name="skip_next">Skip Next</string>
+    <string name="no_audio_files_available">No audio files available</string>
+    <string name="_0_00">0.00</string>
+    <string name="currently_playing_song">Currently Playing Song</string>
 </resources>

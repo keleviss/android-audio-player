@@ -13,6 +13,7 @@ import android.content.ContentResolver;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        noMusicTextView = findViewById(R.id.no_music_available);
         recyclerView = findViewById(R.id.recycler_view);
         songTitle = findViewById(R.id.currentSongTitle);
         playPauseBtn = findViewById(R.id.play_pause_btn);
@@ -76,17 +78,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Check External Storage Permission
     void checkExternalStoragePermission() {
-        int selfPermission = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE);
-        // Check if permission is not granted
-        if (selfPermission != PackageManager.PERMISSION_GRANTED) {
-            // Permission is not granted, request it
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 123);
-        } else {
+        int selfPermission;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            selfPermission = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_MEDIA_AUDIO);
+        else
+            selfPermission = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE);
+
+        // Check if permission is granted
+        if(selfPermission == PackageManager.PERMISSION_GRANTED)
+        {
             // Permission is already granted, you can proceed with reading storage files
-            // Your code to access and read audio files goes here
             loadAudioFiles();
+        } else {
+            // Permission is not granted, request it
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_MEDIA_AUDIO}, 123);
+            else
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 123);
         }
     }
 
@@ -94,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
         if (requestCode == 123) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted, you can proceed with reading storage files

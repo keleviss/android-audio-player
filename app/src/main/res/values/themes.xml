@@ -1,5 +1,5 @@
 <resources>
-    <style name="Theme.ServPlayer" parent="Base.Theme.ServPlayer">
+    <style name="Theme.ServPlayer" parent="Theme.AppCompat.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/dark_10</item>
         <item name="colorPrimaryVariant">@color/dark_10</item>
