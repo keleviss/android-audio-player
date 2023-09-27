@@ -15,6 +15,8 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import java.util.Objects;
+
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener,
         MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnSeekCompleteListener,
         MediaPlayer.OnInfoListener, MediaPlayer.OnBufferingUpdateListener,
@@ -25,42 +27,42 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private int resumePosition; //Used to pause/resume MediaPlayer
     private AudioManager audioManager;
 
-    private static final String CHANNEL_ID = "Serv Player";
-    private static final int NOTIFICATION_ID = 1;
+    String SERVICE_START = "service_start";
+    String SERVICE_STOP = "service_stop";
+    String SERVICE_PLAY_SONG = "service_play_song";
+    String SERVICE_STOP_SONG = "service_stop_song";
+    String SERVICE_NEXT_SONG = "service_next_song";
+    String SERVICE_PREV_SONG = "service_prev_song";
+    String SERVICE_SELECT_SONG = "service_select_song";
 
+    // Service Lifecycle Methods ===================================================================
     @Override
     public void onCreate() {
 
-        ShowMessage("OnCreate");
+        ShowMessage("Service onCreate");
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID,
-                    "Your Channel Name",
-                    NotificationManager.IMPORTANCE_DEFAULT
-            );
-
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
-
-        // Create a notification
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.rectangle_icon_nobg)
-                .setContentTitle("Serv Player")
-                .setContentText("Ready for playback")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-
-        Notification notification = notificationBuilder.build();
-
-        // Start the service as a foreground service with the notification
-        startForeground(NOTIFICATION_ID, notification);
     }
 
+    // Executed when the startService() method is called
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
+        if (Objects.equals(intent.getAction(), SERVICE_START)) {
+            ShowMessage("Service onStartCommand");
+            createNotification();
+        } else if (Objects.equals(intent.getAction(), SERVICE_SELECT_SONG)) {
+            ShowMessage("Service onStartCommand");
+            createNotification();
+        }
+
+        return START_STICKY;
+    }
+
+    // Executed when the user removes the app from the "recent apps" list
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         super.onTaskRemoved(rootIntent);
-        ShowMessage("Task Removed");
+        ShowMessage("Service onTaskRemoved");
         stopForeground(true);
         stopSelf();
     }
@@ -68,9 +70,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public void onDestroy() {
         super.onDestroy();
-        ShowMessage("Service Destroyed");
+        ShowMessage("Service onDestroy");
     }
 
+    // Audio Playback Methods ======================================================================
     @Override
     public void onBufferingUpdate(MediaPlayer mediaPlayer, int i) {
 
@@ -133,5 +136,35 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     {
         ShowMessage ("Unbinded...");
         return false;              //Allow Rebind? For started services
+    }
+
+    // Create Foreground Notification ==============================================================
+
+    private static final String CHANNEL_ID = "Serv Player";
+    private static final int NOTIFICATION_ID = 1;
+
+    public void createNotification() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Your Channel Name",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            );
+
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        // Create a notification
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.rectangle_icon_nobg)
+                .setContentTitle("Serv Player")
+                .setContentText("Ready for playback")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+        Notification notification = notificationBuilder.build();
+
+        // Start the service as a foreground service with the notification
+        startForeground(NOTIFICATION_ID, notification);
     }
 }

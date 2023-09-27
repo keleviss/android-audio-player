@@ -34,10 +34,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     RecyclerView recyclerView;
     TextView noMusicTextView;
     ArrayList<Song> songsList = new ArrayList<>();
-    TextView songTitle;
     ImageButton playPauseBtn, nextBtn, prevBtn;
     MediaPlayerService MusicServ;
     boolean Connected;
+    String SERVICE_START = "service_start";
+    String SERVICE_STOP = "service_stop";
+    String SERVICE_PLAY_SONG = "service_play_song";
+    String SERVICE_STOP_SONG = "service_stop_song";
+    String SERVICE_NEXT_SONG = "service_next_song";
+    String SERVICE_PREV_SONG = "service_prev_song";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         noMusicTextView = findViewById(R.id.no_music_available);
         recyclerView = findViewById(R.id.recycler_view);
-        songTitle = findViewById(R.id.currentSongTitle);
         playPauseBtn = findViewById(R.id.play_pause_btn);
         playPauseBtn.setOnClickListener(this);
         nextBtn = findViewById(R.id.next_btn);
@@ -55,7 +59,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         checkExternalStoragePermission();
 
         Connected = false;
-
     }
 
     @Override
@@ -70,12 +73,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         if (view.equals(playPauseBtn)) {
             if (!Connected) {
-                System.out.println("Trying to connect to service...");
-                ShowMessage("Trying to connect to service...");
                 Intent serviceInt = new Intent (this, MediaPlayerService.class);
-
+                serviceInt.setAction(SERVICE_START);
                 startService(serviceInt);
-
                 bindService (serviceInt, ServCon, Context.BIND_AUTO_CREATE);
             }
         }

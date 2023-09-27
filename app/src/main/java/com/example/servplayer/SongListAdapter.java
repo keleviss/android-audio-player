@@ -2,6 +2,7 @@ package com.example.servplayer;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.view.LayoutInflater;
@@ -10,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,6 +22,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
 
     ArrayList<Song> songsList;
     Context context;
+    String SERVICE_SELECT_SONG = "service_select_song";
 
     public SongListAdapter(ArrayList<Song> songsList, Context context) {
         this.songsList = songsList;
@@ -43,25 +44,12 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         String duration = formatDuration(songData.getDuration());
         holder.durationTextView.setText(duration);
 
-
-
-        /*if (MyMediaPlayer.currentIndex == position) {
-            holder.titleTextView.setTextColor(Color.parseColor("#FF00E9FE"));
-        } else {
-            holder.titleTextView.setTextColor(Color.parseColor("#FFFFFF"));
-        }*/
-
         holder.itemView.setOnClickListener(v -> {
-            Toast.makeText(context, "Selected song: " + holder.titleTextView.getText(), Toast.LENGTH_SHORT).show();
             holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#6E39CC")));
-            /*
-            MyMediaPlayer.getInstance().reset();
-            MyMediaPlayer.currentIndex = holder.getAdapterPosition();
-            Intent intent = new Intent(context, MusicPlayerActivity.class);
-            intent.putExtra("LIST", songsList);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
-            */
+            Intent songSelectIntent = new Intent(context, MediaPlayerService.class);
+            songSelectIntent.putExtra("songFilePath", songData.path);
+            songSelectIntent.setAction(SERVICE_SELECT_SONG);
+            context.startService(songSelectIntent);
         });
     }
 
