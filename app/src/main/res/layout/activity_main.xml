@@ -59,7 +59,7 @@
             android:layout_marginTop="15dp"
             android:layout_marginStart="45dp"
             android:layout_marginEnd="45dp"
-            android:progressTint="@color/white"
+            android:progressTint="#6E39CC"
             android:progressBackgroundTint="#5E5E5E"
             android:thumbTint="@color/white"
             android:progress="30"/>

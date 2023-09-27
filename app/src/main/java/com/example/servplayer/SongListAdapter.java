@@ -2,10 +2,13 @@ package com.example.servplayer;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,6 +53,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
 
         holder.itemView.setOnClickListener(v -> {
             Toast.makeText(context, "Selected song: " + holder.titleTextView.getText(), Toast.LENGTH_SHORT).show();
+            holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#6E39CC")));
             /*
             MyMediaPlayer.getInstance().reset();
             MyMediaPlayer.currentIndex = holder.getAdapterPosition();
@@ -68,6 +72,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
+        RelativeLayout relativeLayout;
         TextView titleTextView;
         ImageView iconImageView;
         TextView durationTextView;
@@ -77,6 +82,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
             titleTextView = itemView.findViewById(R.id.titleView);
             iconImageView = itemView.findViewById(R.id.artworkView);
             durationTextView = itemView.findViewById(R.id.durationView);
+            relativeLayout = itemView.findViewById(R.id.song_panel);
             titleTextView.setSelected(true);
         }
     }
