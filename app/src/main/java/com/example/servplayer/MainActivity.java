@@ -9,12 +9,17 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.ImageButton;
@@ -24,13 +29,15 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     RecyclerView recyclerView;
     TextView noMusicTextView;
     ArrayList<Song> songsList = new ArrayList<>();
     TextView songTitle;
     ImageButton playPauseBtn, nextBtn, prevBtn;
+    MediaPlayerService MusicServ;
+    boolean Connected;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,11 +48,38 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recycler_view);
         songTitle = findViewById(R.id.currentSongTitle);
         playPauseBtn = findViewById(R.id.play_pause_btn);
+        playPauseBtn.setOnClickListener(this);
         nextBtn = findViewById(R.id.next_btn);
         prevBtn = findViewById(R.id.prev_btn);
 
         checkExternalStoragePermission();
 
+        Connected = false;
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ShowMessage("Activity On Destroy");
+        Intent serviceInt = new Intent(this, MediaPlayerService.class);
+        unbindService(ServCon);
+        stopService(serviceInt);
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (view.equals(playPauseBtn)) {
+            if (!Connected) {
+                System.out.println("Trying to connect to service...");
+                ShowMessage("Trying to connect to service...");
+                Intent serviceInt = new Intent (this, MediaPlayerService.class);
+
+                startService(serviceInt);
+
+                bindService (serviceInt, ServCon, Context.BIND_AUTO_CREATE);
+            }
+        }
     }
 
     void loadAudioFiles() {
@@ -112,9 +146,37 @@ public class MainActivity extends AppCompatActivity {
                 loadAudioFiles();
             } else {
                 // Permission denied, handle it gracefully (e.g., show a message to the user)
-                Toast.makeText(this, "Permission denied...", Toast.LENGTH_LONG).show();
+                ShowMessage("Permission denied...");
             }
         }
+    }
+
+    private ServiceConnection ServCon = new ServiceConnection ()
+    {
+
+        @Override
+        public void onServiceConnected (ComponentName className, IBinder service)
+        {
+            System.out.println ("***3");
+            ShowMessage ("Connected to Service");
+            MediaPlayerService.LocalBinder binder = (MediaPlayerService.LocalBinder) service;
+            MusicServ = binder.getService();
+            Connected = true;
+        }
+
+        @Override
+        public void onServiceDisconnected (ComponentName CompNam)
+        {
+            System.out.println ("***4");
+            ShowMessage ("Disconnected from Service");
+            Connected = false;
+        }
+    };
+
+    private void ShowMessage (String Mess)
+    {
+        Toast Tst = Toast.makeText (getApplicationContext (), "Service: " + Mess, Toast.LENGTH_LONG);
+        Tst.show ();
     }
 
 }

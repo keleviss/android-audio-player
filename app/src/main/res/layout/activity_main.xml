@@ -107,7 +107,9 @@
             android:layout_centerHorizontal="true"
             android:background="@drawable/play_btn_bg"
             android:backgroundTint="#6E39CC"
-            android:src="@drawable/baseline_pause_45"
+            android:src="@drawable/baseline_play_arrow_50"
+            android:clickable="true"
+            android:focusable="true"
             android:contentDescription="@string/play_pause" />
 
         <ImageButton
@@ -121,6 +123,8 @@
             app:layout_constraintBottom_toBottomOf="@id/play_pause_btn"
             android:background="@drawable/next_prev_btn_bg"
             android:src="@drawable/baseline_skip_previous_24"
+            android:clickable="true"
+            android:focusable="true"
             android:contentDescription="@string/skip_previous" />
 
         <ImageButton
@@ -134,6 +138,8 @@
             app:layout_constraintBottom_toBottomOf="@id/play_pause_btn"
             android:background="@drawable/next_prev_btn_bg"
             android:src="@drawable/baseline_skip_next_24"
+            android:clickable="true"
+            android:focusable="true"
             android:contentDescription="@string/skip_next" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
