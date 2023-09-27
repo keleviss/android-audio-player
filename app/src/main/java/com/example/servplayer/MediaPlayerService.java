@@ -9,6 +9,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.widget.Toast;
 
@@ -49,10 +50,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         if (Objects.equals(intent.getAction(), SERVICE_START)) {
             ShowMessage("Service onStartCommand");
-            createNotification();
+            createNotification("No Song");
         } else if (Objects.equals(intent.getAction(), SERVICE_SELECT_SONG)) {
-            ShowMessage("Service onStartCommand");
-            createNotification();
+            Bundle extras = intent.getExtras();
+            Song song = (Song) extras.get("songData");
+            ShowMessage("On Start: " + song.getTitle());
+            createNotification(song.getTitle());
         }
 
         return START_STICKY;
@@ -143,7 +146,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private static final String CHANNEL_ID = "Serv Player";
     private static final int NOTIFICATION_ID = 1;
 
-    public void createNotification() {
+    public void createNotification(String songTitle) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
@@ -158,7 +161,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         // Create a notification
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.rectangle_icon_nobg)
-                .setContentTitle("Serv Player")
+                .setContentTitle(songTitle)
                 .setContentText("Ready for playback")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
