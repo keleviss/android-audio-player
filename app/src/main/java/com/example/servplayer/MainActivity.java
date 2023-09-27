@@ -64,7 +64,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ShowMessage("Activity On Destroy");
         Intent serviceInt = new Intent(this, MediaPlayerService.class);
         unbindService(ServCon);
-        stopService(serviceInt);
     }
 
     @Override

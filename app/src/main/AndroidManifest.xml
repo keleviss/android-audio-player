@@ -31,7 +31,9 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".MediaPlayerService"/>
+        <service android:name=".MediaPlayerService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="true" />
     </application>
 
 </manifest>

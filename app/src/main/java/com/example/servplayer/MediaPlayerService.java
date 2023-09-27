@@ -49,7 +49,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 .setSmallIcon(R.drawable.rectangle_icon_nobg)
                 .setContentTitle("Serv Player")
                 .setContentText("Ready for playback")
-                .setPriority(NotificationCompat.PRIORITY_HIGH);
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
         Notification notification = notificationBuilder.build();
 
@@ -58,9 +58,17 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        ShowMessage("Task Removed");
+        stopForeground(true);
+        stopSelf();
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
-        ShowMessage("Service On Destroy");
+        ShowMessage("Service Destroyed");
     }
 
     @Override
