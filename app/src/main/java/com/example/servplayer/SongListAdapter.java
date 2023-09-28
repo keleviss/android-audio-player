@@ -22,7 +22,6 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
 
     ArrayList<Song> songsList;
     Context context;
-    public int onBindPosition;
     String SERVICE_SELECT_SONG = "service_select_song";
 
     public SongListAdapter(ArrayList<Song> songsList, Context context) {
@@ -33,7 +32,6 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        //inflate song row item layout
         View view = LayoutInflater.from(context).inflate(R.layout.recycler_item, parent, false);
         return new ViewHolder(view);
     }
@@ -46,12 +44,17 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         holder.durationTextView.setText(duration);
 
         holder.itemView.setOnClickListener(v -> {
-            onBindPosition = holder.getAdapterPosition();
-            holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#6E39CC")));
+            MyMediaPlayer.currentIndex = holder.getAdapterPosition();
             Intent songSelectIntent = new Intent(context, MediaPlayerService.class);
             songSelectIntent.putExtra("media", songData);
             songSelectIntent.setAction(SERVICE_SELECT_SONG);
             context.startService(songSelectIntent);
+
+            /*if (MyMediaPlayer.currentIndex == position) {
+                holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#6E39CC")));
+            } else {
+                holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF141414")));
+            }*/
         });
     }
 

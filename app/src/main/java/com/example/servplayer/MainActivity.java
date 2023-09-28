@@ -9,10 +9,8 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.app.Service;
 import android.content.ComponentName;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -36,15 +34,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TextView noMusicTextView;
     TextView songTitleTextView;
     ArrayList<Song> songsList = new ArrayList<>();
-    int currentSong = 0;
-    SongListAdapter adapter;
     ImageButton playPauseBtn, nextBtn, prevBtn;
     MediaPlayerService MusicServ;
+    int currentSong;
     boolean Playing;
+    boolean Paused;
     boolean Connected;
 
     String SERVICE_PLAY_SONG = "service_play_song";
-    String SERVICE_STOP_SONG = "service_stop_song";
+    String SERVICE_PAUSE_SONG = "service_pause_song";
     String SERVICE_NEXT_SONG = "service_next_song";
     String SERVICE_PREV_SONG = "service_prev_song";
 
@@ -65,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         checkExternalStoragePermission();
 
+        Paused = false;
         Playing = false;
         Connected = false;
     }
@@ -84,67 +83,63 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 playAudio();
                 playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
             } else {
-                stopAudio();
+                pauseAudio();
                 playPauseBtn.setImageResource(R.drawable.baseline_play_arrow_50);
             }
         } else if (view.equals(prevBtn)) {
-            prevSong();
-            playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
+            if (Playing || Paused) {
+                prevSong();
+                playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
+            }
         } else if (view.equals(nextBtn)) {
-            nextSong();
-            playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
+            if (Playing || Paused) {
+                nextSong();
+                playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
+            }
         }
         //bindService(serviceInt, ServCon, Context.BIND_AUTO_CREATE);
     }
 
     void playAudio() {
-        Intent serviceInt = new Intent(this, MediaPlayerService.class);
-        serviceInt.setAction(SERVICE_PLAY_SONG);
-        serviceInt.putExtra("media", songsList.get(currentSong));
-        startService(serviceInt);
+        Intent playInt = new Intent(this, MediaPlayerService.class);
+        playInt.setAction(SERVICE_PLAY_SONG);
+        if (!Paused)
+            playInt.putExtra("media", songsList.get(currentSong));
+        startService(playInt);
         Playing = true;
+        Paused = false;
     }
 
-    void stopAudio() {
-        Intent serviceInt = new Intent(this, MediaPlayerService.class);
-        serviceInt.setAction(SERVICE_STOP_SONG);
-        startService(serviceInt);
+    void pauseAudio() {
+        Intent stopInt = new Intent(this, MediaPlayerService.class);
+        stopInt.setAction(SERVICE_PAUSE_SONG);
+        startService(stopInt);
         Playing = false;
+        Paused = true;
     }
 
     void prevSong() {
-        currentSong--;
-        Intent serviceInt = new Intent(this, MediaPlayerService.class);
-        serviceInt.setAction(SERVICE_PREV_SONG);
-        adapter = (SongListAdapter) recyclerView.getAdapter();
-        if(adapter != null) {
-            if (currentSong == adapter.onBindPosition) {
-                serviceInt.putExtra("media", songsList.get(currentSong));
-            } else {
-                serviceInt.putExtra("media", songsList.get(adapter.onBindPosition));
-            }
-        } else {
-            serviceInt.putExtra("media", songsList.get(currentSong));
-        }
-        startService(serviceInt);
+        currentSong = --MyMediaPlayer.currentIndex;
+
+        Intent prevInt = new Intent(this, MediaPlayerService.class);
+        prevInt.setAction(SERVICE_PREV_SONG);
+        prevInt.putExtra("media", songsList.get(currentSong));
+        startService(prevInt);
+
         Playing = true;
+        Paused = false;
     }
 
     void nextSong() {
-        currentSong++;
-        Intent serviceInt = new Intent(this, MediaPlayerService.class);
-        serviceInt.setAction(SERVICE_NEXT_SONG);
-        if(adapter != null) {
-            if (currentSong == adapter.onBindPosition) {
-                serviceInt.putExtra("media", songsList.get(currentSong));
-            } else {
-                serviceInt.putExtra("media", songsList.get(adapter.onBindPosition));
-            }
-        } else {
-            serviceInt.putExtra("media", songsList.get(currentSong));
-        }
-        startService(serviceInt);
+        currentSong = ++MyMediaPlayer.currentIndex;
+
+        Intent nextInt = new Intent(this, MediaPlayerService.class);
+        nextInt.setAction(SERVICE_NEXT_SONG);
+        nextInt.putExtra("media", songsList.get(currentSong));
+        startService(nextInt);
+
         Playing = true;
+        Paused = false;
     }
 
     void loadAudioFiles() {
@@ -216,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private ServiceConnection ServCon = new ServiceConnection ()
+    private final ServiceConnection ServCon = new ServiceConnection ()
     {
 
         @Override

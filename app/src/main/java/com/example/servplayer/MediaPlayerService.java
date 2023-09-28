@@ -24,13 +24,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         MediaPlayer.OnInfoListener, MediaPlayer.OnBufferingUpdateListener,
         AudioManager.OnAudioFocusChangeListener {
 
-    private MediaPlayer mediaPlayer;
+    private final MediaPlayer mediaPlayer = MyMediaPlayer.getInstance();
     private int resumePosition; //Used to pause/resume MediaPlayer
     private boolean Paused = false;
+    private Song currentSong;
     private AudioManager audioManager;
 
     String SERVICE_PLAY_SONG = "service_play_song";
-    String SERVICE_STOP_SONG = "service_stop_song";
+    String SERVICE_PAUSE_SONG = "service_pause_song";
     String SERVICE_NEXT_SONG = "service_next_song";
     String SERVICE_PREV_SONG = "service_prev_song";
     String SERVICE_SELECT_SONG = "service_select_song";
@@ -38,11 +39,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     // Service Lifecycle Methods ===================================================================
     @Override
     public void onCreate() {
+        initMediaPlayer();
         ShowMessage("Service onCreate");
     }
 
     private void initMediaPlayer() {
-        mediaPlayer = new MediaPlayer();
 
         //Set up MediaPlayer event listeners
         mediaPlayer.setOnCompletionListener(this);
@@ -59,45 +60,45 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     private void playMedia() {
-        if (mediaPlayer != null) {
-            if (!mediaPlayer.isPlaying() && !Paused) {
-                mediaPlayer.start();
-            } else if (!mediaPlayer.isPlaying() && Paused) {
-                mediaPlayer.seekTo(resumePosition);
-                mediaPlayer.start();
-                Paused = false;
-            }
-        }
-    }
-
-    private void stopMedia() {
-        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-            mediaPlayer.stop();
+        if (!mediaPlayer.isPlaying()) {
+            mediaPlayer.start();
             Paused = false;
         }
     }
 
+    private void resumeMedia() {
+        mediaPlayer.seekTo(resumePosition);
+        Paused = false;
+    }
+
     private void pauseMedia() {
-        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+        if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
             resumePosition = mediaPlayer.getCurrentPosition();
             Paused = true;
         }
     }
 
-    public void prepareMedia(String msg, Intent intent) {
+    private void stopMedia() {
+        mediaPlayer.stop();
+    }
+
+    public void prepareMedia(String msg, Intent intent, String notificationStatus) {
         ShowMessage(msg);
         Bundle extras = intent.getExtras();
-        Song song = (Song) extras.get("media");
+        if (extras != null) {
+            currentSong = (Song) extras.get("media");
+        }
         try {
-            // Set the data source to the mediaFile location
-            mediaPlayer.setDataSource(song.getPath());
+            mediaPlayer.stop();
+            mediaPlayer.reset();
+            mediaPlayer.setDataSource(currentSong.getPath());
+            mediaPlayer.prepareAsync();
+            createNotification(currentSong.getTitle(), notificationStatus);
         } catch (IOException e) {
             e.printStackTrace();
             stopSelf();
         }
-        mediaPlayer.prepareAsync();
-        createNotification(song.getTitle());
     }
 
     // Executed when the startService() method is called
@@ -107,29 +108,29 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         if (mediaPlayer == null)
             initMediaPlayer();
 
-        if (intent.getAction() == SERVICE_PLAY_SONG) {
-            prepareMedia("Pressed Play", intent);
+        if (Objects.equals(intent.getAction(), SERVICE_PLAY_SONG)) {
+            if (Paused)
+                resumeMedia();
+            else {
+                prepareMedia("Pressed Play", intent, "Media Playing");
+                playMedia();
+            }
+        } else if (Objects.equals(intent.getAction(), SERVICE_SELECT_SONG)) {
+            prepareMedia("Selected Song", intent, "Media Playing");
             playMedia();
-        } else if (intent.getAction() == SERVICE_SELECT_SONG) {
-            stopMedia();
-            initMediaPlayer();
-            prepareMedia("Song Selected", intent);
+        } else if (Objects.equals(intent.getAction(), SERVICE_PREV_SONG)) {
+            prepareMedia("Skip Prev", intent, "Media Playing");
             playMedia();
-        } else if (intent.getAction() == SERVICE_PREV_SONG) {
-            stopMedia();
-            initMediaPlayer();
-            prepareMedia("Pressed Prev", intent);
+        } else if (Objects.equals(intent.getAction(), SERVICE_NEXT_SONG)) {
+            prepareMedia("Skip Next", intent, "Media Playing");
             playMedia();
-        } else if (intent.getAction() == SERVICE_NEXT_SONG) {
-            stopMedia();
-            initMediaPlayer();
-            prepareMedia("Pressed Next", intent);
-            playMedia();
-        } else if (intent.getAction() == SERVICE_STOP_SONG) {
+        } else if (Objects.equals(intent.getAction(), SERVICE_PAUSE_SONG)) {
+            Toast.makeText(this, "Pressed Pause", Toast.LENGTH_SHORT).show();
+            createNotification(currentSong.getTitle(), "Media Paused");
             pauseMedia();
         }
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     // Executed when the user removes the app from the "recent apps" list
@@ -179,7 +180,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     @Override
     public void onSeekComplete(MediaPlayer mediaPlayer) {
-
+        playMedia();
     }
 
     @Override
@@ -221,7 +222,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private static final String CHANNEL_ID = "Serv Player";
     private static final int NOTIFICATION_ID = 1;
 
-    public void createNotification(String songTitle) {
+    public void createNotification(String songTitle, String status) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
@@ -237,7 +238,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.rectangle_icon_nobg)
                 .setContentTitle(songTitle)
-                .setContentText("Ready for playback")
+                .setContentText(status)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
         Notification notification = notificationBuilder.build();
