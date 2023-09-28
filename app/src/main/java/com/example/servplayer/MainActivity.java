@@ -37,11 +37,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ImageButton playPauseBtn, nextBtn, prevBtn;
     MediaPlayerService MusicServ;
     int currentSong;
-    boolean Playing;
-    boolean Paused;
     boolean Connected;
 
     String SERVICE_PLAY_SONG = "service_play_song";
+    String SERVICE_RESUME_SONG = "service_resume_song";
     String SERVICE_PAUSE_SONG = "service_pause_song";
     String SERVICE_NEXT_SONG = "service_next_song";
     String SERVICE_PREV_SONG = "service_prev_song";
@@ -63,8 +62,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         checkExternalStoragePermission();
 
-        Paused = false;
-        Playing = false;
         Connected = false;
     }
 
@@ -79,20 +76,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         if (view.equals(playPauseBtn)) {
-            if (!Playing) {
+            if (MyMediaPlayer.isStopped) {
                 playAudio();
+                playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
+            } else if (MyMediaPlayer.isPaused) {
+                resumeAudio();
                 playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
             } else {
                 pauseAudio();
                 playPauseBtn.setImageResource(R.drawable.baseline_play_arrow_50);
             }
         } else if (view.equals(prevBtn)) {
-            if (Playing || Paused) {
+            if (!MyMediaPlayer.isStopped) {
                 prevSong();
                 playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
             }
         } else if (view.equals(nextBtn)) {
-            if (Playing || Paused) {
+            if (!MyMediaPlayer.isStopped) {
                 nextSong();
                 playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
             }
@@ -103,19 +103,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     void playAudio() {
         Intent playInt = new Intent(this, MediaPlayerService.class);
         playInt.setAction(SERVICE_PLAY_SONG);
-        if (!Paused)
-            playInt.putExtra("media", songsList.get(currentSong));
+        playInt.putExtra("media", songsList.get(currentSong));
         startService(playInt);
-        Playing = true;
-        Paused = false;
+        MyMediaPlayer.isPaused = false;
+        MyMediaPlayer.isStopped = false;
+    }
+
+    void resumeAudio() {
+        Intent resumeInt = new Intent(this, MediaPlayerService.class);
+        resumeInt.setAction(SERVICE_RESUME_SONG);
+        startService(resumeInt);
+        MyMediaPlayer.isPaused = false;
     }
 
     void pauseAudio() {
         Intent stopInt = new Intent(this, MediaPlayerService.class);
         stopInt.setAction(SERVICE_PAUSE_SONG);
         startService(stopInt);
-        Playing = false;
-        Paused = true;
+        MyMediaPlayer.isPaused = true;
     }
 
     void prevSong() {
@@ -126,8 +131,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         prevInt.putExtra("media", songsList.get(currentSong));
         startService(prevInt);
 
-        Playing = true;
-        Paused = false;
+        MyMediaPlayer.isPaused = false;
     }
 
     void nextSong() {
@@ -138,8 +142,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         nextInt.putExtra("media", songsList.get(currentSong));
         startService(nextInt);
 
-        Playing = true;
-        Paused = false;
+        MyMediaPlayer.isPaused = false;
     }
 
     void loadAudioFiles() {

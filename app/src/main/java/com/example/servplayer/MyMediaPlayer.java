@@ -14,4 +14,6 @@ public class MyMediaPlayer extends MediaPlayer
     }
 
     public static int currentIndex = 0;
+    public static boolean isPaused = true;
+    public static boolean isStopped = true;
 }

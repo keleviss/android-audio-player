@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -26,7 +27,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     private final MediaPlayer mediaPlayer = MyMediaPlayer.getInstance();
     private int resumePosition; //Used to pause/resume MediaPlayer
-    private boolean Paused = false;
     private Song currentSong;
     private AudioManager audioManager;
 
@@ -62,25 +62,30 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private void playMedia() {
         if (!mediaPlayer.isPlaying()) {
             mediaPlayer.start();
-            Paused = false;
+            MyMediaPlayer.isPaused = false;
+            MyMediaPlayer.isStopped = false;
         }
     }
 
     private void resumeMedia() {
         mediaPlayer.seekTo(resumePosition);
-        Paused = false;
+        MyMediaPlayer.isPaused = false;
     }
 
     private void pauseMedia() {
         if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
             resumePosition = mediaPlayer.getCurrentPosition();
-            Paused = true;
+            MyMediaPlayer.isPaused = true;
         }
     }
 
     private void stopMedia() {
-        mediaPlayer.stop();
+        if (mediaPlayer.isPlaying()) {
+            mediaPlayer.stop();
+            MyMediaPlayer.isStopped = true;
+            MyMediaPlayer.isPaused = true;
+        }
     }
 
     public void prepareMedia(String msg, Intent intent, String notificationStatus) {
@@ -105,13 +110,15 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        if (!requestAudioFocus())
+            stopSelf();
         if (mediaPlayer == null)
             initMediaPlayer();
 
         if (Objects.equals(intent.getAction(), SERVICE_PLAY_SONG)) {
-            if (Paused)
+            if (MyMediaPlayer.isPaused) {
                 resumeMedia();
-            else {
+            } else {
                 prepareMedia("Pressed Play", intent, "Media Playing");
                 playMedia();
             }
@@ -184,8 +191,48 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     @Override
-    public void onAudioFocusChange(int i) {
+    public void onAudioFocusChange(int focusChange) {
+        //Invoked when the audio focus of the system is updated.
+        switch (focusChange) {
+            case AudioManager.AUDIOFOCUS_GAIN:
+                ShowMessage("Audio Focus Gain");
+                //start playback
+                if (!mediaPlayer.isPlaying() && MyMediaPlayer.isStopped) playMedia();
+                //resume playback
+                if (!mediaPlayer.isPlaying() && MyMediaPlayer.isPaused) resumeMedia();
+                mediaPlayer.setVolume(1.0f, 1.0f);
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS:
+                ShowMessage("Audio Focus Loss");
+                // Lost focus for an unbounded amount of time: stop playback
+                stopMedia();
+                mediaPlayer.release();
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                ShowMessage("Audio Focus Loss Transient");
+                // Lost focus for a short amount of time, but we have to pause playback.
+                // We don't release the media player because playback is likely to resume
+                pauseMedia();
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                ShowMessage("Audio Focus Loss Transient Can Duck");
+                // Lost focus for a short amount of time, but it's ok to keep playing
+                // at an attenuated level
+                if (mediaPlayer.isPlaying()) mediaPlayer.setVolume(0.1f, 0.1f);
+                break;
+        }
+    }
 
+    private boolean requestAudioFocus() {
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+
+        //Return TRUE if focus was granted or FALSE if focus was not granted
+        return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
+    }
+
+    private boolean removeAudioFocus() {
+        return AudioManager.AUDIOFOCUS_REQUEST_GRANTED == audioManager.abandonAudioFocus(this);
     }
 
     private void ShowMessage (String Mess)

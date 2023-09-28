@@ -50,6 +50,9 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
             songSelectIntent.setAction(SERVICE_SELECT_SONG);
             context.startService(songSelectIntent);
 
+            MyMediaPlayer.isPaused = false;
+            MyMediaPlayer.isStopped = false;
+
             /*if (MyMediaPlayer.currentIndex == position) {
                 holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#6E39CC")));
             } else {
