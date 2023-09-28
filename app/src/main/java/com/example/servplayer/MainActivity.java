@@ -172,6 +172,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else {
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
             recyclerView.setAdapter(new SongListAdapter(songsList, getApplicationContext()));
+            /*SongListAdapter songListAdapter = new SongListAdapter(songsList, this);
+            songListAdapter.setOnItemClickListener(new SongListAdapter.OnItemClickListener() {
+                @Override
+                public void onItemClick(int position) {
+                    playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
+                }
+            });*/
         }
     }
 

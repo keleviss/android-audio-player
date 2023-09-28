@@ -43,22 +43,26 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         String duration = formatDuration(songData.getDuration());
         holder.durationTextView.setText(duration);
 
-        holder.itemView.setOnClickListener(v -> {
+        holder.itemView.setOnClickListener(view -> {
+            MyMediaPlayer.isPaused = false;
+            MyMediaPlayer.isStopped = false;
+
+            if (listener != null) {
+                listener.onItemClick(holder.getAdapterPosition());
+            }
+
             MyMediaPlayer.currentIndex = holder.getAdapterPosition();
             Intent songSelectIntent = new Intent(context, MediaPlayerService.class);
             songSelectIntent.putExtra("media", songData);
             songSelectIntent.setAction(SERVICE_SELECT_SONG);
             context.startService(songSelectIntent);
-
-            MyMediaPlayer.isPaused = false;
-            MyMediaPlayer.isStopped = false;
-
-            /*if (MyMediaPlayer.currentIndex == position) {
-                holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#6E39CC")));
-            } else {
-                holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF141414")));
-            }*/
         });
+
+        /*if (MyMediaPlayer.currentIndex == position) {
+            holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#6E39CC")));
+        } else {
+            holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF141414")));
+        }*/
     }
 
     @Override
@@ -99,4 +103,13 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         return String.format("%02d:%02d", minutes, seconds);
     }
 
+    private OnItemClickListener listener;
+
+    public interface OnItemClickListener {
+        void onItemClick(int position);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
 }
