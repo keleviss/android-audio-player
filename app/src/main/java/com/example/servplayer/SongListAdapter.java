@@ -22,6 +22,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
 
     ArrayList<Song> songsList;
     Context context;
+    public int onBindPosition;
     String SERVICE_SELECT_SONG = "service_select_song";
 
     public SongListAdapter(ArrayList<Song> songsList, Context context) {
@@ -45,6 +46,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         holder.durationTextView.setText(duration);
 
         holder.itemView.setOnClickListener(v -> {
+            onBindPosition = holder.getAdapterPosition();
             holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#6E39CC")));
             Intent songSelectIntent = new Intent(context, MediaPlayerService.class);
             songSelectIntent.putExtra("media", songData);

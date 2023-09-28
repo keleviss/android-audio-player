@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TextView songTitleTextView;
     ArrayList<Song> songsList = new ArrayList<>();
     int currentSong = 0;
+    SongListAdapter adapter;
     ImageButton playPauseBtn, nextBtn, prevBtn;
     MediaPlayerService MusicServ;
     boolean Playing;
@@ -56,9 +57,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         songTitleTextView = findViewById(R.id.currentSongTitle);
         recyclerView = findViewById(R.id.recycler_view);
         playPauseBtn = findViewById(R.id.play_pause_btn);
-        playPauseBtn.setOnClickListener(this);
         nextBtn = findViewById(R.id.next_btn);
         prevBtn = findViewById(R.id.prev_btn);
+        playPauseBtn.setOnClickListener(this);
+        nextBtn.setOnClickListener(this);
+        prevBtn.setOnClickListener(this);
 
         checkExternalStoragePermission();
 
@@ -113,7 +116,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         currentSong--;
         Intent serviceInt = new Intent(this, MediaPlayerService.class);
         serviceInt.setAction(SERVICE_PREV_SONG);
-        serviceInt.putExtra("media", songsList.get(currentSong));
+        adapter = (SongListAdapter) recyclerView.getAdapter();
+        if(adapter != null) {
+            if (currentSong == adapter.onBindPosition) {
+                serviceInt.putExtra("media", songsList.get(currentSong));
+            } else {
+                serviceInt.putExtra("media", songsList.get(adapter.onBindPosition));
+            }
+        } else {
+            serviceInt.putExtra("media", songsList.get(currentSong));
+        }
         startService(serviceInt);
         Playing = true;
     }
@@ -122,7 +134,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         currentSong++;
         Intent serviceInt = new Intent(this, MediaPlayerService.class);
         serviceInt.setAction(SERVICE_NEXT_SONG);
-        serviceInt.putExtra("media", songsList.get(currentSong));
+        if(adapter != null) {
+            if (currentSong == adapter.onBindPosition) {
+                serviceInt.putExtra("media", songsList.get(currentSong));
+            } else {
+                serviceInt.putExtra("media", songsList.get(adapter.onBindPosition));
+            }
+        } else {
+            serviceInt.putExtra("media", songsList.get(currentSong));
+        }
         startService(serviceInt);
         Playing = true;
     }
