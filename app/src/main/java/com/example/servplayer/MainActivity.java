@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Service;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -33,12 +34,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     RecyclerView recyclerView;
     TextView noMusicTextView;
+    TextView songTitleTextView;
     ArrayList<Song> songsList = new ArrayList<>();
+    int currentSong = 0;
     ImageButton playPauseBtn, nextBtn, prevBtn;
     MediaPlayerService MusicServ;
+    boolean Playing;
     boolean Connected;
-    String SERVICE_START = "service_start";
-    String SERVICE_STOP = "service_stop";
+
     String SERVICE_PLAY_SONG = "service_play_song";
     String SERVICE_STOP_SONG = "service_stop_song";
     String SERVICE_NEXT_SONG = "service_next_song";
@@ -50,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         noMusicTextView = findViewById(R.id.no_music_available);
+        songTitleTextView = findViewById(R.id.currentSongTitle);
         recyclerView = findViewById(R.id.recycler_view);
         playPauseBtn = findViewById(R.id.play_pause_btn);
         playPauseBtn.setOnClickListener(this);
@@ -58,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         checkExternalStoragePermission();
 
+        Playing = false;
         Connected = false;
     }
 
@@ -65,20 +70,61 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         ShowMessage("Activity On Destroy");
-        Intent serviceInt = new Intent(this, MediaPlayerService.class);
-        unbindService(ServCon);
+        if (Connected)
+            unbindService(ServCon);
     }
 
     @Override
     public void onClick(View view) {
         if (view.equals(playPauseBtn)) {
-            if (!Connected) {
-                Intent serviceInt = new Intent (this, MediaPlayerService.class);
-                serviceInt.setAction(SERVICE_START);
-                startService(serviceInt);
-                bindService (serviceInt, ServCon, Context.BIND_AUTO_CREATE);
+            if (!Playing) {
+                playAudio();
+                playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
+            } else {
+                stopAudio();
+                playPauseBtn.setImageResource(R.drawable.baseline_play_arrow_50);
             }
+        } else if (view.equals(prevBtn)) {
+            prevSong();
+            playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
+        } else if (view.equals(nextBtn)) {
+            nextSong();
+            playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
         }
+        //bindService(serviceInt, ServCon, Context.BIND_AUTO_CREATE);
+    }
+
+    void playAudio() {
+        Intent serviceInt = new Intent(this, MediaPlayerService.class);
+        serviceInt.setAction(SERVICE_PLAY_SONG);
+        serviceInt.putExtra("media", songsList.get(currentSong));
+        startService(serviceInt);
+        Playing = true;
+    }
+
+    void stopAudio() {
+        Intent serviceInt = new Intent(this, MediaPlayerService.class);
+        serviceInt.setAction(SERVICE_STOP_SONG);
+        startService(serviceInt);
+        Playing = false;
+    }
+
+    void prevSong() {
+        currentSong--;
+        Intent serviceInt = new Intent(this, MediaPlayerService.class);
+        serviceInt.setAction(SERVICE_PREV_SONG);
+        serviceInt.putExtra("media", songsList.get(currentSong));
+        startService(serviceInt);
+        Playing = true;
+    }
+
+    void nextSong() {
+        currentSong++;
+        Intent serviceInt = new Intent(this, MediaPlayerService.class);
+        serviceInt.setAction(SERVICE_NEXT_SONG);
+        serviceInt.putExtra("media", songsList.get(currentSong));
+        startService(serviceInt);
+        Playing = true;
     }
 
     void loadAudioFiles() {
@@ -177,5 +223,4 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toast Tst = Toast.makeText (getApplicationContext (), "Service: " + Mess, Toast.LENGTH_LONG);
         Tst.show ();
     }
-
 }

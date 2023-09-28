@@ -47,7 +47,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         holder.itemView.setOnClickListener(v -> {
             holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#6E39CC")));
             Intent songSelectIntent = new Intent(context, MediaPlayerService.class);
-            songSelectIntent.putExtra("songData", songsList.get(position));
+            songSelectIntent.putExtra("media", songData);
             songSelectIntent.setAction(SERVICE_SELECT_SONG);
             context.startService(songSelectIntent);
         });

@@ -16,6 +16,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener,
@@ -24,12 +25,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         AudioManager.OnAudioFocusChangeListener {
 
     private MediaPlayer mediaPlayer;
-    private String mediaFile;   //path to the audio file
     private int resumePosition; //Used to pause/resume MediaPlayer
+    private boolean Paused = false;
     private AudioManager audioManager;
 
-    String SERVICE_START = "service_start";
-    String SERVICE_STOP = "service_stop";
     String SERVICE_PLAY_SONG = "service_play_song";
     String SERVICE_STOP_SONG = "service_stop_song";
     String SERVICE_NEXT_SONG = "service_next_song";
@@ -39,26 +38,98 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     // Service Lifecycle Methods ===================================================================
     @Override
     public void onCreate() {
-
         ShowMessage("Service onCreate");
+    }
 
+    private void initMediaPlayer() {
+        mediaPlayer = new MediaPlayer();
+
+        //Set up MediaPlayer event listeners
+        mediaPlayer.setOnCompletionListener(this);
+        mediaPlayer.setOnErrorListener(this);
+        mediaPlayer.setOnPreparedListener(this);
+        mediaPlayer.setOnBufferingUpdateListener(this);
+        mediaPlayer.setOnSeekCompleteListener(this);
+        mediaPlayer.setOnInfoListener(this);
+
+        //Reset so that the MediaPlayer is not pointing to another data source
+        mediaPlayer.reset();
+
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+    }
+
+    private void playMedia() {
+        if (mediaPlayer != null) {
+            if (!mediaPlayer.isPlaying() && !Paused) {
+                mediaPlayer.start();
+            } else if (!mediaPlayer.isPlaying() && Paused) {
+                mediaPlayer.seekTo(resumePosition);
+                mediaPlayer.start();
+                Paused = false;
+            }
+        }
+    }
+
+    private void stopMedia() {
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.stop();
+            Paused = false;
+        }
+    }
+
+    private void pauseMedia() {
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+            resumePosition = mediaPlayer.getCurrentPosition();
+            Paused = true;
+        }
+    }
+
+    public void prepareMedia(String msg, Intent intent) {
+        ShowMessage(msg);
+        Bundle extras = intent.getExtras();
+        Song song = (Song) extras.get("media");
+        try {
+            // Set the data source to the mediaFile location
+            mediaPlayer.setDataSource(song.getPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+            stopSelf();
+        }
+        mediaPlayer.prepareAsync();
+        createNotification(song.getTitle());
     }
 
     // Executed when the startService() method is called
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        if (Objects.equals(intent.getAction(), SERVICE_START)) {
-            ShowMessage("Service onStartCommand");
-            createNotification("No Song");
-        } else if (Objects.equals(intent.getAction(), SERVICE_SELECT_SONG)) {
-            Bundle extras = intent.getExtras();
-            Song song = (Song) extras.get("songData");
-            ShowMessage("On Start: " + song.getTitle());
-            createNotification(song.getTitle());
+        if (mediaPlayer == null)
+            initMediaPlayer();
+
+        if (intent.getAction() == SERVICE_PLAY_SONG) {
+            prepareMedia("Pressed Play", intent);
+            playMedia();
+        } else if (intent.getAction() == SERVICE_SELECT_SONG) {
+            stopMedia();
+            initMediaPlayer();
+            prepareMedia("Song Selected", intent);
+            playMedia();
+        } else if (intent.getAction() == SERVICE_PREV_SONG) {
+            stopMedia();
+            initMediaPlayer();
+            prepareMedia("Pressed Prev", intent);
+            playMedia();
+        } else if (intent.getAction() == SERVICE_NEXT_SONG) {
+            stopMedia();
+            initMediaPlayer();
+            prepareMedia("Pressed Next", intent);
+            playMedia();
+        } else if (intent.getAction() == SERVICE_STOP_SONG) {
+            pauseMedia();
         }
 
-        return START_STICKY;
+        return super.onStartCommand(intent, flags, startId);
     }
 
     // Executed when the user removes the app from the "recent apps" list
@@ -73,6 +144,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (mediaPlayer != null) {
+            stopMedia();
+            mediaPlayer.release();
+        }
         ShowMessage("Service onDestroy");
     }
 
@@ -99,7 +174,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
-
+        playMedia();
     }
 
     @Override
