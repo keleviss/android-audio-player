@@ -35,12 +35,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     String SERVICE_NEXT_SONG = "service_next_song";
     String SERVICE_PREV_SONG = "service_prev_song";
     String SERVICE_SELECT_SONG = "service_select_song";
+    String SERVICE_RESUME_SONG = "service_resume_song";
 
     // Service Lifecycle Methods ===================================================================
     @Override
     public void onCreate() {
         initMediaPlayer();
-        ShowMessage("Service onCreate");
     }
 
     private void initMediaPlayer() {
@@ -62,21 +62,17 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     private void playMedia() {
         if (!mediaPlayer.isPlaying()) {
             mediaPlayer.start();
-            MyMediaPlayer.isPaused = false;
-            MyMediaPlayer.isStopped = false;
         }
     }
 
     private void resumeMedia() {
         mediaPlayer.seekTo(resumePosition);
-        MyMediaPlayer.isPaused = false;
     }
 
     private void pauseMedia() {
         if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
             resumePosition = mediaPlayer.getCurrentPosition();
-            MyMediaPlayer.isPaused = true;
         }
     }
 
@@ -84,7 +80,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         if (mediaPlayer.isPlaying()) {
             mediaPlayer.stop();
             MyMediaPlayer.isStopped = true;
-            MyMediaPlayer.isPaused = true;
         }
     }
 
@@ -116,23 +111,22 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             initMediaPlayer();
 
         if (Objects.equals(intent.getAction(), SERVICE_PLAY_SONG)) {
-            if (MyMediaPlayer.isPaused) {
-                resumeMedia();
-            } else {
-                prepareMedia("Pressed Play", intent, "Media Playing");
-                playMedia();
-            }
-        } else if (Objects.equals(intent.getAction(), SERVICE_SELECT_SONG)) {
-            prepareMedia("Selected Song", intent, "Media Playing");
+            prepareMedia("Media Playing", intent, "Media Playing");
             playMedia();
+        } else if (Objects.equals(intent.getAction(), SERVICE_SELECT_SONG)) {
+            prepareMedia("Media Selected", intent, "Media Playing");
+            playMedia();
+        } else if (Objects.equals(intent.getAction(), SERVICE_RESUME_SONG)) {
+            ShowMessage("Media Resumed");
+            resumeMedia();
         } else if (Objects.equals(intent.getAction(), SERVICE_PREV_SONG)) {
-            prepareMedia("Skip Prev", intent, "Media Playing");
+            prepareMedia("Media Skipped", intent, "Media Playing");
             playMedia();
         } else if (Objects.equals(intent.getAction(), SERVICE_NEXT_SONG)) {
-            prepareMedia("Skip Next", intent, "Media Playing");
+            prepareMedia("Media Skipped", intent, "Media Playing");
             playMedia();
         } else if (Objects.equals(intent.getAction(), SERVICE_PAUSE_SONG)) {
-            Toast.makeText(this, "Pressed Pause", Toast.LENGTH_SHORT).show();
+            ShowMessage("Media Paused");
             createNotification(currentSong.getTitle(), "Media Paused");
             pauseMedia();
         }
@@ -156,6 +150,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             stopMedia();
             mediaPlayer.release();
         }
+        removeAudioFocus();
         ShowMessage("Service onDestroy");
     }
 
@@ -231,8 +226,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
     }
 
-    private boolean removeAudioFocus() {
-        return AudioManager.AUDIOFOCUS_REQUEST_GRANTED == audioManager.abandonAudioFocus(this);
+    private void removeAudioFocus() {
+        audioManager.abandonAudioFocus(this);
     }
 
     private void ShowMessage (String Mess)

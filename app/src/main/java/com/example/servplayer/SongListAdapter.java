@@ -3,8 +3,6 @@ package com.example.servplayer;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,10 +44,6 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         holder.itemView.setOnClickListener(view -> {
             MyMediaPlayer.isPaused = false;
             MyMediaPlayer.isStopped = false;
-
-            if (listener != null) {
-                listener.onItemClick(holder.getAdapterPosition());
-            }
 
             MyMediaPlayer.currentIndex = holder.getAdapterPosition();
             Intent songSelectIntent = new Intent(context, MediaPlayerService.class);
@@ -103,13 +97,4 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         return String.format("%02d:%02d", minutes, seconds);
     }
 
-    private OnItemClickListener listener;
-
-    public interface OnItemClickListener {
-        void onItemClick(int position);
-    }
-
-    public void setOnItemClickListener(OnItemClickListener listener) {
-        this.listener = listener;
-    }
 }
