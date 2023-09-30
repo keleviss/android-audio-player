@@ -15,13 +15,16 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,12 +32,14 @@ import java.io.File;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    
+
     RecyclerView recyclerView;
     TextView noMusicTextView;
     TextView songTitleTextView;
+    SeekBar seekBar;
     ArrayList<Song> songsList = new ArrayList<>();
     ImageButton playPauseBtn, nextBtn, prevBtn;
+    MediaPlayer mediaPlayer = MyMediaPlayer.getInstance();
     MediaPlayerService MusicServ;
     boolean Connected;
 
@@ -43,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     String SERVICE_PAUSE_SONG = "service_pause_song";
     String SERVICE_NEXT_SONG = "service_next_song";
     String SERVICE_PREV_SONG = "service_prev_song";
+    String SERVICE_SEEKBAR_SONG = "service_seekbar_song";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +58,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         noMusicTextView = findViewById(R.id.no_music_available);
         songTitleTextView = findViewById(R.id.currentSongTitle);
+        seekBar = findViewById(R.id.seekbar);
+        seekBar.setProgress(0);
         recyclerView = findViewById(R.id.recycler_view);
         playPauseBtn = findViewById(R.id.play_pause_btn);
         nextBtn = findViewById(R.id.next_btn);
@@ -62,6 +70,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         checkExternalStoragePermission();
 
+        MainActivity.this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                    //Constantly update the seekBar when the mediaPlayer is playing
+                    seekBar.setProgress(mediaPlayer.getCurrentPosition());
+                    if (seekBar.getMax() != mediaPlayer.getDuration()) {
+                        seekBar.setMax(mediaPlayer.getDuration());
+                    }
+                    playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
+                } else if (MyMediaPlayer.isStopped || MyMediaPlayer.isPaused) {
+                    playPauseBtn.setImageResource(R.drawable.baseline_play_arrow_50);
+                }
+                new Handler().postDelayed(this, 50);
+            }
+        });
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (mediaPlayer != null && fromUser) {
+                    Intent seekBarIntent = new Intent(MainActivity.this, MediaPlayerService.class);
+                    seekBarIntent.setAction(SERVICE_SEEKBAR_SONG);
+                    seekBarIntent.putExtra("current position", progress);
+                    startService(seekBarIntent);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
     }
 
     @Override

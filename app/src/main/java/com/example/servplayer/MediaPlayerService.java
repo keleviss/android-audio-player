@@ -36,6 +36,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     String SERVICE_PREV_SONG = "service_prev_song";
     String SERVICE_SELECT_SONG = "service_select_song";
     String SERVICE_RESUME_SONG = "service_resume_song";
+    String SERVICE_SEEKBAR_SONG = "service_seekbar_song";
 
     // Service Lifecycle Methods ===================================================================
     @Override
@@ -90,7 +91,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             currentSong = (Song) extras.get("media");
         }
         try {
-            mediaPlayer.stop();
             mediaPlayer.reset();
             mediaPlayer.setDataSource(currentSong.getPath());
             mediaPlayer.prepareAsync();
@@ -129,6 +129,19 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             ShowMessage("Media Paused");
             createNotification(currentSong.getTitle(), "Media Paused");
             pauseMedia();
+        } else if (Objects.equals(intent.getAction(), SERVICE_SEEKBAR_SONG)) {
+            if (mediaPlayer != null) {
+                Bundle extras = intent.getExtras();
+                if (extras != null) {
+                    //noinspection DataFlowIssue
+                    int currentPosition = (int) extras.get("current position");
+
+                    if (mediaPlayer.isPlaying())
+                        mediaPlayer.seekTo(currentPosition);
+                    else
+                        resumePosition = currentPosition;
+                }
+            }
         }
 
         return START_STICKY;

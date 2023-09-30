@@ -44,8 +44,8 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         holder.itemView.setOnClickListener(view -> {
             MyMediaPlayer.isPaused = false;
             MyMediaPlayer.isStopped = false;
-
             MyMediaPlayer.currentIndex = holder.getAdapterPosition();
+
             Intent songSelectIntent = new Intent(context, MediaPlayerService.class);
             songSelectIntent.putExtra("media", songData);
             songSelectIntent.setAction(SERVICE_SELECT_SONG);
