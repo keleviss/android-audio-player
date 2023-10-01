@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     MediaPlayer mediaPlayer = MyMediaPlayer.getInstance();
     //boolean Loaded = false;
 
+    // Intent actions
     String SERVICE_PLAY_SONG = "service_play_song";
     String SERVICE_RESUME_SONG = "service_resume_song";
     String SERVICE_PAUSE_SONG = "service_pause_song";
@@ -65,25 +66,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         nextBtn.setOnClickListener(this);
         prevBtn.setOnClickListener(this);
 
+        // Check for storage permission and request it if needed
         checkExternalStoragePermission();
 
+        // Touch and update the application UI
         MainActivity.this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                    //Constantly update the seekBar when the mediaPlayer is playing
+                    // Constantly update the seekBar when the mediaPlayer is playing
                     seekBar.setProgress(mediaPlayer.getCurrentPosition());
 
+                    // Check which song is playing and update the song title text view
                     if (songTitleTextView.getText() != songsList.get(MyMediaPlayer.currentIndex).getTitle()) {
                         songTitleTextView.setSelected(true);
                         songTitleTextView.setText(songsList.get(MyMediaPlayer.currentIndex).getTitle());
                     }
 
+                    // Set seekbar max based on the duration of the current song
                     if (seekBar.getMax() != mediaPlayer.getDuration()) {
                         seekBar.setMax(mediaPlayer.getDuration());
                     }
+
+                    // Set the play/pause button to the pause image view
                     playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
                 } else if (MyMediaPlayer.isStopped || MyMediaPlayer.isPaused) {
+                    // Set the play/pause button to the play image view
                     playPauseBtn.setImageResource(R.drawable.baseline_play_arrow_50);
                     songTitleTextView.setSelected(false);
                 }
@@ -91,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
+        // Listener for the changes that the user does on the seekbar
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -193,6 +202,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startService(nextInt);
     }
 
+    // Load audio files from the devices external storage using query with the cursor class
     void loadAudioFiles() {
         songsList = new ArrayList<>();
 
@@ -232,6 +242,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    // Check external storage permission and request if it needed
     void checkExternalStoragePermission() {
         int selfPermission;
 
@@ -271,6 +282,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    // Toast message creation method
     private void ShowMessage (String Mess)
     {
         Toast Tst = Toast.makeText (getApplicationContext (), "Service: " + Mess, Toast.LENGTH_LONG);
