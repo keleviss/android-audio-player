@@ -9,10 +9,8 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.MediaPlayer;
@@ -20,7 +18,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.ImageButton;
@@ -40,8 +37,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ArrayList<Song> songsList = new ArrayList<>();
     ImageButton playPauseBtn, nextBtn, prevBtn;
     MediaPlayer mediaPlayer = MyMediaPlayer.getInstance();
-    MediaPlayerService MusicServ;
-    boolean Connected;
+    //boolean Loaded = false;
 
     String SERVICE_PLAY_SONG = "service_play_song";
     String SERVICE_RESUME_SONG = "service_resume_song";
@@ -49,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     String SERVICE_NEXT_SONG = "service_next_song";
     String SERVICE_PREV_SONG = "service_prev_song";
     String SERVICE_SEEKBAR_SONG = "service_seekbar_song";
+    //String SERVICE_GET_SONGS = "service_get_songs";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,15 +70,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MainActivity.this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (mediaPlayer != null && !MyMediaPlayer.isStopped && !MyMediaPlayer.isPaused) {
+                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                     //Constantly update the seekBar when the mediaPlayer is playing
                     seekBar.setProgress(mediaPlayer.getCurrentPosition());
+
+                    if (songTitleTextView.getText() != songsList.get(MyMediaPlayer.currentIndex).getTitle()) {
+                        songTitleTextView.setSelected(true);
+                        songTitleTextView.setText(songsList.get(MyMediaPlayer.currentIndex).getTitle());
+                    }
+
                     if (seekBar.getMax() != mediaPlayer.getDuration()) {
                         seekBar.setMax(mediaPlayer.getDuration());
                     }
                     playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
                 } else if (MyMediaPlayer.isStopped || MyMediaPlayer.isPaused) {
                     playPauseBtn.setImageResource(R.drawable.baseline_play_arrow_50);
+                    songTitleTextView.setSelected(false);
                 }
                 new Handler().postDelayed(this, 50);
             }
@@ -94,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Intent seekBarIntent = new Intent(MainActivity.this, MediaPlayerService.class);
                     seekBarIntent.setAction(SERVICE_SEEKBAR_SONG);
                     seekBarIntent.putExtra("current position", progress);
+                    seekBarIntent.putExtra("current song", songsList.get(MyMediaPlayer.currentIndex));
                     startService(seekBarIntent);
                 }
             }
@@ -113,9 +118,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mediaPlayer = null;
-        if (Connected)
-            unbindService(ServCon);
         ShowMessage("Activity onDestroy");
     }
 
@@ -123,32 +125,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         if (view.equals(playPauseBtn)) {
             if (MyMediaPlayer.isStopped) {
-                ShowMessage("Pressed Play Button");
+                //ShowMessage("Pressed Play Button");
                 playAudio();
-                playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
             } else if (MyMediaPlayer.isPaused) {
-                ShowMessage("Pressed Resume Button");
+                //ShowMessage("Pressed Resume Button");
                 resumeAudio();
-                playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
             } else {
-                ShowMessage("Pressed Pause Button");
+                //ShowMessage("Pressed Pause Button");
                 pauseAudio();
-                playPauseBtn.setImageResource(R.drawable.baseline_play_arrow_50);
             }
         } else if (view.equals(prevBtn)) {
             if (!MyMediaPlayer.isStopped) {
-                ShowMessage("Pressed Skip Button");
+                //ShowMessage("Pressed Skip Button");
                 prevSong();
-                playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
             }
         } else if (view.equals(nextBtn)) {
             if (!MyMediaPlayer.isStopped) {
-                ShowMessage("Pressed Skip Button");
+                //ShowMessage("Pressed Skip Button");
                 nextSong();
-                playPauseBtn.setImageResource(R.drawable.baseline_pause_45);
             }
         }
-        //bindService(serviceInt, ServCon, Context.BIND_AUTO_CREATE);
     }
 
     void playAudio() {
@@ -224,6 +220,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else {
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
             recyclerView.setAdapter(new SongListAdapter(songsList, getApplicationContext()));
+
+            /*if (!Loaded) {
+                Intent loadIntent = new Intent(this, MediaPlayerService.class);
+                loadIntent.setAction(SERVICE_GET_SONGS);
+                loadIntent.putExtra("songsList", songsList);
+                startService(loadIntent);
+                Loaded = true;
+            }*/
+
         }
     }
 
@@ -265,28 +270,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
     }
-
-    private final ServiceConnection ServCon = new ServiceConnection ()
-    {
-
-        @Override
-        public void onServiceConnected (ComponentName className, IBinder service)
-        {
-            System.out.println ("***3");
-            ShowMessage ("Connected to Service");
-            MediaPlayerService.LocalBinder binder = (MediaPlayerService.LocalBinder) service;
-            MusicServ = binder.getService();
-            Connected = true;
-        }
-
-        @Override
-        public void onServiceDisconnected (ComponentName CompNam)
-        {
-            System.out.println ("***4");
-            ShowMessage ("Disconnected from Service");
-            Connected = false;
-        }
-    };
 
     private void ShowMessage (String Mess)
     {

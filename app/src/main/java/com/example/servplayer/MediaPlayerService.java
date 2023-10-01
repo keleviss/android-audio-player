@@ -25,10 +25,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         MediaPlayer.OnInfoListener, MediaPlayer.OnBufferingUpdateListener,
         AudioManager.OnAudioFocusChangeListener {
 
-    private MediaPlayer mediaPlayer = MyMediaPlayer.getInstance();
+    private final MediaPlayer mediaPlayer = MyMediaPlayer.getInstance();
     private int resumePosition; //Used to pause/resume MediaPlayer
     private Song currentSong;
     private AudioManager audioManager;
+    //private ArrayList<Song> songsList;
 
     String SERVICE_PLAY_SONG = "service_play_song";
     String SERVICE_PAUSE_SONG = "service_pause_song";
@@ -37,6 +38,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     String SERVICE_SELECT_SONG = "service_select_song";
     String SERVICE_RESUME_SONG = "service_resume_song";
     String SERVICE_SEEKBAR_SONG = "service_seekbar_song";
+    //String SERVICE_GET_SONGS = "service_get_songs";
 
     // Service Lifecycle Methods ===================================================================
     @Override
@@ -56,16 +58,31 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     @Override
     public void onDestroy() {
+        ShowMessage("Service onDestroy");
         super.onDestroy();
         if (mediaPlayer != null) {
             mediaPlayer.release();
-            mediaPlayer = null;
         }
         removeAudioFocus();
-        ShowMessage("Service onDestroy");
     }
 
     // Executed when the startService() method is called
+    private void initMediaPlayer() {
+
+        //Set up MediaPlayer event listeners
+        mediaPlayer.setOnCompletionListener(this);
+        mediaPlayer.setOnErrorListener(this);
+        mediaPlayer.setOnPreparedListener(this);
+        mediaPlayer.setOnBufferingUpdateListener(this);
+        mediaPlayer.setOnSeekCompleteListener(this);
+        mediaPlayer.setOnInfoListener(this);
+
+        //Reset so that the MediaPlayer is not pointing to another data source
+        mediaPlayer.reset();
+
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
@@ -76,19 +93,15 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         if (Objects.equals(intent.getAction(), SERVICE_PLAY_SONG)) {
             prepareMedia("Media Playing", intent, "Media Playing");
-            playMedia();
         } else if (Objects.equals(intent.getAction(), SERVICE_SELECT_SONG)) {
             prepareMedia("Media Selected", intent, "Media Playing");
-            playMedia();
         } else if (Objects.equals(intent.getAction(), SERVICE_RESUME_SONG)) {
             ShowMessage("Media Resumed");
             resumeMedia();
         } else if (Objects.equals(intent.getAction(), SERVICE_PREV_SONG)) {
             prepareMedia("Media Skipped", intent, "Media Playing");
-            playMedia();
         } else if (Objects.equals(intent.getAction(), SERVICE_NEXT_SONG)) {
             prepareMedia("Media Skipped", intent, "Media Playing");
-            playMedia();
         } else if (Objects.equals(intent.getAction(), SERVICE_PAUSE_SONG)) {
             ShowMessage("Media Paused");
             createNotification(currentSong.getTitle(), "Media Paused");
@@ -106,25 +119,18 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                         resumePosition = currentPosition;
                 }
             }
-        }
+        } /*else if (Objects.equals(intent.getAction(), SERVICE_GET_SONGS)) {
+            Bundle extras = intent.getExtras();
+            if (extras != null) {
+                songsList = new ArrayList<>();
+                songsList = (ArrayList<Song>) extras.get("songsList");
+                for (int i = 0; i < songsList.size(); i++) {
+                    System.out.println("Song [" + i + "] : " + songsList.get(i).getTitle());
+                }
+            }
+        }*/
 
         return START_STICKY;
-    }
-
-    private void initMediaPlayer() {
-
-        //Set up MediaPlayer event listeners
-        mediaPlayer.setOnCompletionListener(this);
-        mediaPlayer.setOnErrorListener(this);
-        mediaPlayer.setOnPreparedListener(this);
-        mediaPlayer.setOnBufferingUpdateListener(this);
-        mediaPlayer.setOnSeekCompleteListener(this);
-        mediaPlayer.setOnInfoListener(this);
-
-        //Reset so that the MediaPlayer is not pointing to another data source
-        mediaPlayer.reset();
-
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
     }
 
     private void playMedia() {
@@ -161,6 +167,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             mediaPlayer.reset();
             mediaPlayer.setDataSource(currentSong.getPath());
             mediaPlayer.prepareAsync();
+            playMedia();
             createNotification(currentSong.getTitle(), notificationStatus);
         } catch (IOException e) {
             e.printStackTrace();
@@ -176,7 +183,35 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
-
+        /*if (mediaPlayer != null) {
+            initMediaPlayer();
+            ShowMessage("Media Completed");
+            MyMediaPlayer.currentIndex++;
+            if (MyMediaPlayer.currentIndex < songsList.size()) {
+                currentSong = songsList.get(MyMediaPlayer.currentIndex);
+                mediaPlayer.reset();
+                try {
+                    mediaPlayer.setDataSource(currentSong.getPath());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                mediaPlayer.prepareAsync();
+                playMedia();
+                createNotification(currentSong.getTitle(), "Media Playing");
+            } else {
+                MyMediaPlayer.currentIndex = 0;
+                currentSong = songsList.get(MyMediaPlayer.currentIndex);
+                mediaPlayer.reset();
+                try {
+                    mediaPlayer.setDataSource(currentSong.getPath());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                mediaPlayer.prepareAsync();
+                playMedia();
+                createNotification(currentSong.getTitle(), "Media Playing");
+            }
+        }*/
     }
 
     @Override
@@ -244,10 +279,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         audioManager.abandonAudioFocus(this);
     }
 
-    private void ShowMessage (String Mess)
-    {
-        Toast Tst = Toast.makeText (getApplicationContext (), "Service: " + Mess, Toast.LENGTH_LONG);
-        Tst.show ();
+    private void ShowMessage(String Mess) {
+        Toast Tst = Toast.makeText(getApplicationContext(), "Service: " + Mess, Toast.LENGTH_LONG);
+        Tst.show();
     }
 
     // Binding Section =============================================================================
@@ -267,10 +301,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     @Override
-    public boolean onUnbind(Intent intent)
-    {
-        ShowMessage ("Unbinded...");
-        return false;              //Allow Rebind? For started services
+    public boolean onUnbind(Intent intent) {
+        ShowMessage("Unbinded...");
+        return false;
     }
 
     // Create Foreground Notification ==============================================================
