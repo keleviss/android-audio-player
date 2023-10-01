@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MainActivity.this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                if (mediaPlayer != null && !MyMediaPlayer.isStopped && !MyMediaPlayer.isPaused) {
                     //Constantly update the seekBar when the mediaPlayer is playing
                     seekBar.setProgress(mediaPlayer.getCurrentPosition());
                     if (seekBar.getMax() != mediaPlayer.getDuration()) {
@@ -113,9 +113,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        ShowMessage("Activity onDestroy");
+        mediaPlayer = null;
         if (Connected)
             unbindService(ServCon);
+        ShowMessage("Activity onDestroy");
     }
 
     @Override

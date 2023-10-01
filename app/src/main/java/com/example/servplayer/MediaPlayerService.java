@@ -25,7 +25,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         MediaPlayer.OnInfoListener, MediaPlayer.OnBufferingUpdateListener,
         AudioManager.OnAudioFocusChangeListener {
 
-    private final MediaPlayer mediaPlayer = MyMediaPlayer.getInstance();
+    private MediaPlayer mediaPlayer = MyMediaPlayer.getInstance();
     private int resumePosition; //Used to pause/resume MediaPlayer
     private Song currentSong;
     private AudioManager audioManager;
@@ -42,6 +42,73 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public void onCreate() {
         initMediaPlayer();
+    }
+
+    // Executed when the user removes the app from the "recent apps" list
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        ShowMessage("Service onTaskRemoved");
+        stopForeground(true);
+        stopSelf();
+        onDestroy();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+        removeAudioFocus();
+        ShowMessage("Service onDestroy");
+    }
+
+    // Executed when the startService() method is called
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
+        if (!requestAudioFocus())
+            stopSelf();
+        if (mediaPlayer == null)
+            initMediaPlayer();
+
+        if (Objects.equals(intent.getAction(), SERVICE_PLAY_SONG)) {
+            prepareMedia("Media Playing", intent, "Media Playing");
+            playMedia();
+        } else if (Objects.equals(intent.getAction(), SERVICE_SELECT_SONG)) {
+            prepareMedia("Media Selected", intent, "Media Playing");
+            playMedia();
+        } else if (Objects.equals(intent.getAction(), SERVICE_RESUME_SONG)) {
+            ShowMessage("Media Resumed");
+            resumeMedia();
+        } else if (Objects.equals(intent.getAction(), SERVICE_PREV_SONG)) {
+            prepareMedia("Media Skipped", intent, "Media Playing");
+            playMedia();
+        } else if (Objects.equals(intent.getAction(), SERVICE_NEXT_SONG)) {
+            prepareMedia("Media Skipped", intent, "Media Playing");
+            playMedia();
+        } else if (Objects.equals(intent.getAction(), SERVICE_PAUSE_SONG)) {
+            ShowMessage("Media Paused");
+            createNotification(currentSong.getTitle(), "Media Paused");
+            pauseMedia();
+        } else if (Objects.equals(intent.getAction(), SERVICE_SEEKBAR_SONG)) {
+            if (mediaPlayer != null) {
+                Bundle extras = intent.getExtras();
+                if (extras != null) {
+                    //noinspection DataFlowIssue
+                    int currentPosition = (int) extras.get("current position");
+
+                    if (mediaPlayer.isPlaying())
+                        mediaPlayer.seekTo(currentPosition);
+                    else
+                        resumePosition = currentPosition;
+                }
+            }
+        }
+
+        return START_STICKY;
     }
 
     private void initMediaPlayer() {
@@ -99,72 +166,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             e.printStackTrace();
             stopSelf();
         }
-    }
-
-    // Executed when the startService() method is called
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-
-        if (!requestAudioFocus())
-            stopSelf();
-        if (mediaPlayer == null)
-            initMediaPlayer();
-
-        if (Objects.equals(intent.getAction(), SERVICE_PLAY_SONG)) {
-            prepareMedia("Media Playing", intent, "Media Playing");
-            playMedia();
-        } else if (Objects.equals(intent.getAction(), SERVICE_SELECT_SONG)) {
-            prepareMedia("Media Selected", intent, "Media Playing");
-            playMedia();
-        } else if (Objects.equals(intent.getAction(), SERVICE_RESUME_SONG)) {
-            ShowMessage("Media Resumed");
-            resumeMedia();
-        } else if (Objects.equals(intent.getAction(), SERVICE_PREV_SONG)) {
-            prepareMedia("Media Skipped", intent, "Media Playing");
-            playMedia();
-        } else if (Objects.equals(intent.getAction(), SERVICE_NEXT_SONG)) {
-            prepareMedia("Media Skipped", intent, "Media Playing");
-            playMedia();
-        } else if (Objects.equals(intent.getAction(), SERVICE_PAUSE_SONG)) {
-            ShowMessage("Media Paused");
-            createNotification(currentSong.getTitle(), "Media Paused");
-            pauseMedia();
-        } else if (Objects.equals(intent.getAction(), SERVICE_SEEKBAR_SONG)) {
-            if (mediaPlayer != null) {
-                Bundle extras = intent.getExtras();
-                if (extras != null) {
-                    //noinspection DataFlowIssue
-                    int currentPosition = (int) extras.get("current position");
-
-                    if (mediaPlayer.isPlaying())
-                        mediaPlayer.seekTo(currentPosition);
-                    else
-                        resumePosition = currentPosition;
-                }
-            }
-        }
-
-        return START_STICKY;
-    }
-
-    // Executed when the user removes the app from the "recent apps" list
-    @Override
-    public void onTaskRemoved(Intent rootIntent) {
-        super.onTaskRemoved(rootIntent);
-        ShowMessage("Service onTaskRemoved");
-        stopForeground(true);
-        stopSelf();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mediaPlayer != null) {
-            stopMedia();
-            mediaPlayer.release();
-        }
-        removeAudioFocus();
-        ShowMessage("Service onDestroy");
     }
 
     // Audio Playback Methods ======================================================================
