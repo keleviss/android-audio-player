@@ -3,8 +3,6 @@ package com.example.servplayer;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,6 +30,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        // Populate the recycler view with the recycler_item.xml file layout
         View view = LayoutInflater.from(context).inflate(R.layout.recycler_item, parent, false);
         return new ViewHolder(view);
     }
@@ -43,19 +42,22 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         String duration = formatDuration(songData.getDuration());
         holder.durationTextView.setText(duration);
 
-        holder.itemView.setOnClickListener(v -> {
+        holder.itemView.setOnClickListener(view -> {
+            MyMediaPlayer.isPaused = false;
+            MyMediaPlayer.isStopped = false;
             MyMediaPlayer.currentIndex = holder.getAdapterPosition();
+
             Intent songSelectIntent = new Intent(context, MediaPlayerService.class);
             songSelectIntent.putExtra("media", songData);
             songSelectIntent.setAction(SERVICE_SELECT_SONG);
             context.startService(songSelectIntent);
-
-            /*if (MyMediaPlayer.currentIndex == position) {
-                holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#6E39CC")));
-            } else {
-                holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF141414")));
-            }*/
         });
+
+        /*if (MyMediaPlayer.currentIndex == position) {
+            holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#6E39CC")));
+        } else {
+            holder.relativeLayout.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF141414")));
+        }*/
     }
 
     @Override
@@ -63,6 +65,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         return songsList.size();
     }
 
+    // Create custom class ViewHolder
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
         RelativeLayout relativeLayout;
@@ -80,6 +83,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         }
     }
 
+    // Format the milliseconds to seconds
     @SuppressLint("DefaultLocale")
     public String formatDuration (String duration) {
         long millis = Long.parseLong(duration);
