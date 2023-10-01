@@ -30,6 +30,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        // Populate the recycler view with the recycler_item.xml file layout
         View view = LayoutInflater.from(context).inflate(R.layout.recycler_item, parent, false);
         return new ViewHolder(view);
     }
@@ -64,6 +65,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         return songsList.size();
     }
 
+    // Create custom class ViewHolder
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
         RelativeLayout relativeLayout;
@@ -81,6 +83,7 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
         }
     }
 
+    // Format the milliseconds to seconds
     @SuppressLint("DefaultLocale")
     public String formatDuration (String duration) {
         long millis = Long.parseLong(duration);
